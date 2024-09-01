@@ -1,0 +1,19 @@
+# Python
+*.pyc
+*.pyo
+__pycache__/
+instance/
+.env
+
+# Node
+node_modules/
+build/
+npm-debug.log
+
+# Docker
+*.log
+*.tmp
+
+# OS-specific
+.DS_Store
+Thumbs.db

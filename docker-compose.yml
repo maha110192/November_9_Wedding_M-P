@@ -1,0 +1,18 @@
+# version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./wedding
+      dockerfile: Dockerfile  # Asegúrate de que este Dockerfile exista en el directorio ./wedding
+    ports:
+      - "3030:3000"
+
+  backend:
+    build:
+      context: ./server_side
+      dockerfile: Dockerfile  # Asegúrate de que este Dockerfile exista en el directorio raíz
+    ports:
+      - "5050:5000"
+    environment:
+      - FLASK_ENV=development
