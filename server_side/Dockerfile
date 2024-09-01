@@ -1,23 +1,23 @@
-# Use a lighter Python base image
+# Usa una imagen base de Python ligera
 FROM python:3.12-alpine
 
-# Install dependencies necessary for building packages
+# Instala dependencias necesarias para construir paquetes
 RUN apk add --no-cache gcc musl-dev
 
-# Set the working directory
+# Establece el directorio de trabajo
 WORKDIR /app
 
-# Copy only the requirements.txt first for better caching
-COPY requirements.txt .
+# Copia solo el archivo requirements.txt primero para un mejor caching
+COPY server_side/requirements.txt .
 
-# Install Python dependencies
+# Instala las dependencias de Python
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application
-COPY . .
+# Copia el resto de los archivos de la aplicación al contenedor
+COPY server_side/app /app
 
-# Expose the port the application will run on
-EXPOSE 5000
+# Expone el puerto en el que la aplicación se ejecutará
+EXPOSE 8000
 
-# Command to start the application using Gunicorn
-CMD ["gunicorn", "-b", "0.0.0.0:5000", "app:app"]
+# Comando para iniciar la aplicación usando Gunicorn
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "app:app"]
