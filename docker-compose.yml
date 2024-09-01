@@ -1,4 +1,4 @@
-# version: '3.8'
+version: '3.8'
 
 services:
   frontend:
@@ -6,13 +6,15 @@ services:
       context: ./wedding
       dockerfile: Dockerfile  # Asegúrate de que este Dockerfile exista en el directorio ./wedding
     ports:
-      - "3030:3000"
+      - "80:80"  # Nginx normalmente sirve en el puerto 80
+    depends_on:
+      - backend  # Asegura que el backend se inicie antes del frontend si es necesario
 
   backend:
     build:
       context: ./server_side
-      dockerfile: Dockerfile  # Asegúrate de que este Dockerfile exista en el directorio raíz
+      dockerfile: Dockerfile  # Asegúrate de que este Dockerfile exista en el directorio ./server_side
     ports:
-      - "5050:5000"
+      - "8000:8000"
     environment:
-      - FLASK_ENV=development
+      - FLASK_ENV=development  # Considera cambiar a 'production' en producción

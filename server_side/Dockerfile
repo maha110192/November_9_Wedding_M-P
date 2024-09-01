@@ -7,17 +7,14 @@ RUN apk add --no-cache gcc musl-dev
 # Establece el directorio de trabajo
 WORKDIR /app
 
-# Copia solo el archivo requirements.txt primero para un mejor caching
-COPY server_side/requirements.txt .
-
-# Instala las dependencias de Python
+# Copia los archivos de configuración y el código
+COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copia el resto de los archivos de la aplicación al contenedor
-COPY server_side/app /app
+COPY . .
 
 # Expone el puerto en el que la aplicación se ejecutará
 EXPOSE 8000
 
 # Comando para iniciar la aplicación usando Gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "app.app:app"]
