@@ -11,9 +11,10 @@ WORKDIR /app
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Copia el resto de los archivos del proyecto
 COPY . .
 
-# Expone el puerto en el que la aplicación se ejecutará
+# Exponer el puerto en el que la aplicación se ejecutará
 EXPOSE 8000
 
 # Comando para iniciar la aplicación usando Gunicorn

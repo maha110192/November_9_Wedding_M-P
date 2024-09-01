@@ -1,29 +1,32 @@
-# Usa una imagen base de Node.js
+# Stage 1: Build the application
 FROM node:16 AS build
 
-# Establece el directorio de trabajo
+# Set the working directory
 WORKDIR /app
 
-# Copia los archivos package.json y package-lock.json
+# Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Instala las dependencias
+# Install dependencies
 RUN npm install
 
-# Copia el resto de los archivos del proyecto
+# Copy the rest of the application
 COPY . .
 
-# Construye la aplicación
+# Build the application
 RUN npm run build
 
-# Usa una imagen base de Nginx para servir la aplicación
+# Stage 2: Serve the application using Nginx
 FROM nginx:alpine
 
-# Copia los archivos construidos al contenedor
+# Copy built files from the previous stage
 COPY --from=build /app/build /usr/share/nginx/html
 
-# Exponer el puerto en el que se sirve la aplicación
+# Copy custom Nginx configuration
+COPY nginx.conf /etc/nginx/nginx.conf
+
+# Expose port 80
 EXPOSE 80
 
-# Comando para iniciar Nginx
+# Start Nginx
 CMD ["nginx", "-g", "daemon off;"]

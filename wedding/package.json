@@ -1,9 +1,7 @@
 {
-  "homepage": "https://maha110192.github.io/wedding",
   "name": "wedding",
   "version": "1.0.0",
   "private": true,
-  "proxy": "http://localhost:5000",
   "dependencies": {
     "@fortawesome/fontawesome-free": "^6.6.0",
     "@fortawesome/fontawesome-svg-core": "^6.6.0",
