@@ -6,15 +6,21 @@ services:
       context: ./wedding
       dockerfile: Dockerfile
     ports:
-      - "80:80"
-    depends_on:
-      - backend
+      - "80:80"  # Expose port 80 for HTTP traffic
+    networks:
+      - app-network
 
-  backend:
+  server_side:
     build:
       context: ./server_side
       dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "8000:8000"  # Expose port 8000 for the backend service
     environment:
-      - FLASK_ENV=development
+      - FLASK_ENV=production  # Use production settings for Flask
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

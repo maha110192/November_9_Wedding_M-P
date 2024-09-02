@@ -159,4 +159,4 @@ if __name__ == '__main__':
     else:
         logger.info("Database already exists.")
     
-    app.run(host='0.0.0.0', port=5000)  # Listen on all network interfaces
+    app.run(host='0.0.0.0', port=8000)  # Listen on all network interfaces

@@ -7,7 +7,7 @@ import {
   ModalBody,
   ModalFooter,
   Spinner,
-} from "react-bootstrap"; // Import Spinner from react-bootstrap
+} from "react-bootstrap";
 import { Button, Form, FormGroup, Input, Label } from "reactstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 
@@ -21,7 +21,7 @@ function Confirmations() {
   const [errors, setErrors] = useState({});
   const [modal, setModal] = useState(false);
   const [confirmation, setConfirmation] = useState("");
-  const [loading, setLoading] = useState(false); // State for loading
+  const [loading, setLoading] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -40,11 +40,12 @@ function Confirmations() {
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
+    console.log("API URL:", process.env.REACT_APP_API_URL);
     if (validateForm()) {
-      setLoading(true); // Set loading to true when form is submitted
+      setLoading(true);
       try {
         const response = await axios.post(
-          "http://localhost:5000/submit",
+          `${process.env.REACT_APP_API_URL}/submit`,  // Using the environment variable
           formData,
           {
             headers: {
@@ -53,12 +54,12 @@ function Confirmations() {
           }
         );
         setConfirmation(response.data.message);
-        toggleModal(); // Toggle modal to show confirmation details
+        toggleModal();
       } catch (error) {
         console.error("There was an error!", error);
         setErrors({ submit: "There was an error submitting the form." });
       } finally {
-        setLoading(false); // Set loading to false after request is completed
+        setLoading(false);
       }
     }
   };
@@ -66,10 +67,9 @@ function Confirmations() {
   const toggleModal = () => {
     setModal(!modal);
     if (modal) {
-      // If modal is being closed
-      setFormData({ name: "", email: "", phone: "", guests: "" }); // Reset form fields
-      setErrors({}); // Reset errors
-      setConfirmation(""); // Reset confirmation message
+      setFormData({ name: "", email: "", phone: "", guests: "" });
+      setErrors({});
+      setConfirmation("");
     }
   };
 
@@ -81,7 +81,7 @@ function Confirmations() {
             <h2>RSVP</h2>
             <h4>- Please confirm your attendance by September 30th, 2024 -</h4>
           </div>
-          <FormGroup >
+          <FormGroup>
             <Label for="name">Name</Label>
             <Input
               type="text"
@@ -104,7 +104,7 @@ function Confirmations() {
             {errors.email && <div style={{ color: "red" }}>{errors.email}</div>}
           </FormGroup>
           <FormGroup>
-            <Label for="phone">Phone Number:</Label>
+            <Label for="phone">Phone</Label>
             <Input
               type="text"
               name="phone"
@@ -119,7 +119,6 @@ function Confirmations() {
             <Input
               type="select"
               name="guests"
-              description="Bring your +1"
               className="confirmBox"
               value={formData.guests}
               onChange={handleInputChange}
@@ -192,6 +191,7 @@ export default Confirmations;
 
 
 
+
 // import React, { useState } from "react";
 // import axios from "axios";
 // import {
@@ -200,7 +200,8 @@ export default Confirmations;
 //   ModalHeader,
 //   ModalBody,
 //   ModalFooter,
-// } from "react-bootstrap";
+//   Spinner,
+// } from "react-bootstrap"; // Import Spinner from react-bootstrap
 // import { Button, Form, FormGroup, Input, Label } from "reactstrap";
 // import "bootstrap/dist/css/bootstrap.min.css";
 
@@ -214,6 +215,7 @@ export default Confirmations;
 //   const [errors, setErrors] = useState({});
 //   const [modal, setModal] = useState(false);
 //   const [confirmation, setConfirmation] = useState("");
+//   const [loading, setLoading] = useState(false); // State for loading
 
 //   const handleInputChange = (e) => {
 //     const { name, value } = e.target;
@@ -233,9 +235,10 @@ export default Confirmations;
 //   const handleFormSubmit = async (e) => {
 //     e.preventDefault();
 //     if (validateForm()) {
+//       setLoading(true); // Set loading to true when form is submitted
 //       try {
 //         const response = await axios.post(
-//           "http://localhost:5000/submit",
+//           "http://0.0.0.0:8000/submit",
 //           formData,
 //           {
 //             headers: {
@@ -248,11 +251,12 @@ export default Confirmations;
 //       } catch (error) {
 //         console.error("There was an error!", error);
 //         setErrors({ submit: "There was an error submitting the form." });
+//       } finally {
+//         setLoading(false); // Set loading to false after request is completed
 //       }
 //     }
 //   };
 
-//   // const toggleModal = () => setModal(!modal);
 //   const toggleModal = () => {
 //     setModal(!modal);
 //     if (modal) {
@@ -266,12 +270,12 @@ export default Confirmations;
 //   return (
 //     <section className="block services-block">
 //       <Container fluid>
-//         <Form onSubmit={handleFormSubmit} className="confirmationForm ">
+//         <Form onSubmit={handleFormSubmit} className="confirmationForm">
 //           <div className="title-holder" id="title-confirm">
-//             <h2>Confirmation</h2>
-//             <div className="subtitle">Note: Please let the groom/bride know if you or your +1 are not attending </div>
+//             <h2>RSVP</h2>
+//             <h4>- Please confirm your attendance by September 30th, 2024 -</h4>
 //           </div>
-//           <FormGroup>
+//           <FormGroup >
 //             <Label for="name">Name</Label>
 //             <Input
 //               type="text"
@@ -294,7 +298,7 @@ export default Confirmations;
 //             {errors.email && <div style={{ color: "red" }}>{errors.email}</div>}
 //           </FormGroup>
 //           <FormGroup>
-//             <Label for="phone">Phone</Label>
+//             <Label for="phone">Phone Number:</Label>
 //             <Input
 //               type="text"
 //               name="phone"
@@ -305,37 +309,54 @@ export default Confirmations;
 //             {errors.phone && <div style={{ color: "red" }}>{errors.phone}</div>}
 //           </FormGroup>
 //           <FormGroup>
-//             <Label for="guests">Guests</Label>
+//             <Label for="guests">Number of Attendees:</Label>
 //             <Input
 //               type="select"
 //               name="guests"
 //               description="Bring your +1"
+//               className="confirmBox"
 //               value={formData.guests}
 //               onChange={handleInputChange}
 //             >
 //               <option value="">Select...</option>
-//               {/* <option value="0">0</option> */}
 //               <option value="1">1</option>
 //               <option value="2">2</option>
 //             </Input>
-//             {errors.guests && (
-//               <div style={{ color: "red" }}>{errors.guests}</div>
-//             )}
+//             {errors.guests && <div style={{ color: "red" }}>{errors.guests}</div>}
 //           </FormGroup>
-//           <Button type="submit" className="btn btn-primary" id="confirmButton" value="Confirm">
-//             Confirm
+//           <Button
+//             type="submit"
+//             className="btn btn-primary"
+//             id="confirmButton"
+//             disabled={loading} // Disable button while loading
+//           >
+//             {loading ? (
+//               <>
+//                 <Spinner
+//                   as="span"
+//                   animation="border"
+//                   size="sm"
+//                   role="status"
+//                   aria-hidden="true"
+//                   className="mr-2"
+//                 />
+//                 Submitting...
+//               </>
+//             ) : (
+//               "Confirm"
+//             )}
 //           </Button>
 //         </Form>
 //         <Modal show={modal} onHide={toggleModal}>
 //           <ModalHeader closeButton>
-//             <h2>Confirmation Details</h2>
+//             <h2>Confirmed</h2>
 //           </ModalHeader>
 //           <ModalBody>
 //             <ul>
 //               <li>Name: {formData.name}</li>
 //               <li>Email: {formData.email}</li>
 //               <li>Phone: {formData.phone}</li>
-//               <li>Number of Guests: {formData.guests}</li>
+//               <li>Number of Attendees: {formData.guests}</li>
 //             </ul>
 //           </ModalBody>
 //           <ModalFooter>
@@ -355,9 +376,9 @@ export default Confirmations;
 //           </div>
 //         )}
 //       </Container>
-//       <div></div>
 //     </section>
 //   );
 // }
 
 // export default Confirmations;
+
