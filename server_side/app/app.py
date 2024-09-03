@@ -25,7 +25,10 @@ app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USE_SSL'] = False
 
 # Configurations for SQLAlchemy
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
+database_url = os.getenv('DATABASE_URL')
+if not database_url:
+    raise ValueError("DATABASE_URL environment variable is not set.")
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_POOL_SIZE'] = 10
 app.config['SQLALCHEMY_MAX_OVERFLOW'] = 20
@@ -63,15 +66,13 @@ def create_database_if_not_exists():
     # Check if the database exists
     try:
         with server_engine.connect() as conn:
-            conn.execute(text(f"SELECT 1 FROM pg_database WHERE datname = :db_name"), {"db_name": db_name})
-    except Exception as e:
-        logger.info("Database does not exist. Creating database...")
-        try:
-            with server_engine.connect() as conn:
+            result = conn.execute(text("SELECT 1 FROM pg_database WHERE datname = :db_name"), {"db_name": db_name}).fetchone()
+            if not result:
+                logger.info("Database does not exist. Creating database...")
                 conn.execute(text(f"CREATE DATABASE {db_name}"))
-        except Exception as e:
-            logger.error(f"Failed to create database: {e}")
-            raise
+    except Exception as e:
+        logger.error(f"Failed to create database: {e}")
+        raise
 
 def execute_with_retry(func, retries=5, delay=1):
     for attempt in range(retries):
