@@ -92,12 +92,14 @@ def submit():
     data = request.json
     logger.info(f"Received data: {data}")
 
-    # Check for missing fields
-    if not all([data.get('name'), data.get('email'), data.get('phone'), data.get('guests')]):
-        logger.error("Validation error: All fields are required")
-        return jsonify({'error': 'All fields are required'}), 400
+    # Check for missing fields and log
+    missing_fields = [field for field in ['name', 'email', 'phone', 'guests'] if data.get(field) is None]
+    if missing_fields:
+        logger.error(f"Validation error: Missing fields - {missing_fields}")
+        return jsonify({'error': f"Missing fields: {', '.join(missing_fields)}"}), 400
 
     def save_to_db():
+        logger.info("Saving data to the database...")
         new_data = FormData(
             name=data['name'],
             email=data['email'],
@@ -106,7 +108,7 @@ def submit():
         )
         db.session.add(new_data)
         db.session.commit()
-        logger.info(f"Data saved: {new_data}")
+        logger.info(f"Data saved: {new_data}, with ID: {new_data.id}")
 
     try:
         create_database_if_not_exists()  # Ensure database exists
