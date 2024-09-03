@@ -16,6 +16,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8000:8000"  # Expose port 8000 for the backend service
+    volumes:
+      - server_data:/app/data  # Mount volume for database persistence
     environment:
       - FLASK_ENV=production  # Use production settings for Flask
     networks:
@@ -24,3 +26,6 @@ services:
 networks:
   app-network:
     driver: bridge
+
+volumes:
+  server_data:  # Define the volume

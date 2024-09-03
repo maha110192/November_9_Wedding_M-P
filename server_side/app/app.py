@@ -23,11 +23,11 @@ app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USE_SSL'] = False
 
 # Configurations for SQLAlchemy
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///formdata.db?timeout=10')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_POOL_SIZE'] = 5
-app.config['SQLALCHEMY_MAX_OVERFLOW'] = 10
-app.config['SQLALCHEMY_POOL_TIMEOUT'] = 10
+app.config['SQLALCHEMY_POOL_SIZE'] = 10
+app.config['SQLALCHEMY_MAX_OVERFLOW'] = 20
+app.config['SQLALCHEMY_POOL_TIMEOUT'] = 30
 
 mail = Mail(app)
 db = SQLAlchemy(app)
@@ -36,7 +36,6 @@ db = SQLAlchemy(app)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Define a model for form data
 class FormData(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100))
@@ -47,7 +46,6 @@ class FormData(db.Model):
     def __repr__(self):
         return f'<FormData {self.name}>'
 
-# Retry logic for database operations
 def execute_with_retry(func, retries=5, delay=1):
     for attempt in range(retries):
         try:
@@ -61,7 +59,6 @@ def execute_with_retry(func, retries=5, delay=1):
                 raise
     raise Exception("Failed after several retries.")
 
-# POST endpoint to send form data to Gmail and save to the database
 @app.route('/submit', methods=['POST'])
 def submit():
     data = request.json
@@ -82,7 +79,7 @@ def submit():
     try:
         execute_with_retry(save_to_db)
     except Exception as e:
-        db.session.rollback()  # Rollback the transaction in case of error
+        db.session.rollback()
         logger.error(f"Error saving to database: {e}")
         return jsonify({'error': str(e)}), 500
 
@@ -97,7 +94,6 @@ def submit():
         logger.error(f"Error sending email: {e}")
         return jsonify({'error': str(e)}), 500
 
-# GET endpoint to retrieve all form data from the database
 @app.route('/forms', methods=['GET'])
 def get_all_forms():
     try:
@@ -117,7 +113,6 @@ def get_all_forms():
         logger.error(f"OperationalError while retrieving forms: {e}")
         return jsonify({'error': str(e)}), 500
 
-# GET endpoint to retrieve form data by ID
 @app.route('/form/<int:id>', methods=['GET'])
 def get_form_by_id(id):
     try:
@@ -136,7 +131,6 @@ def get_form_by_id(id):
         logger.error(f"OperationalError while retrieving form by ID: {e}")
         return jsonify({'error': str(e)}), 500
 
-# Retry logic for database initialization
 def create_all_with_retry(retries=5, delay=1):
     for attempt in range(retries):
         try:
@@ -153,10 +147,11 @@ def create_all_with_retry(retries=5, delay=1):
     raise Exception("Failed to create database tables after several retries.")
 
 if __name__ == '__main__':
+    # Remove this block if you're using `run_server.py` for running the application
     if not os.path.exists('formdata.db'):
         logger.info("Database does not exist. Creating tables...")
         create_all_with_retry()
     else:
         logger.info("Database already exists.")
-    
-    app.run(host='0.0.0.0', port=8000)  # Listen on all network interfaces
+    port = int(os.environ.get('PORT', 8000))
+    app.run(host='0.0.0.0', port=8000)
