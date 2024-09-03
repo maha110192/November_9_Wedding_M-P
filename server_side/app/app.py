@@ -8,13 +8,13 @@ import logging
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.engine import create_engine
 from sqlalchemy import text
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 app = Flask(__name__, static_folder='../wedding/build', template_folder='../wedding/build')
 CORS(app)
-
-# Load environment variables from .env file
-from dotenv import load_dotenv
-load_dotenv()
 
 # Configurations for Flask-Mail
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
@@ -42,11 +42,11 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class FormData(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100))
-    email = db.Column(db.String(100))
-    phone = db.Column(db.String(20))
-    guests = db.Column(db.String(10))
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(100), nullable=False)
+    phone = db.Column(db.String(20), nullable=False)
+    guests = db.Column(db.String(10), nullable=False)
 
     def __repr__(self):
         return f'<FormData {self.name}>'
@@ -90,7 +90,11 @@ def execute_with_retry(func, retries=5, delay=1):
 @app.route('/submit', methods=['POST'])
 def submit():
     data = request.json
+    logger.info(f"Received data: {data}")
+
+    # Check for missing fields
     if not all([data.get('name'), data.get('email'), data.get('phone'), data.get('guests')]):
+        logger.error("Validation error: All fields are required")
         return jsonify({'error': 'All fields are required'}), 400
 
     def save_to_db():
@@ -118,6 +122,7 @@ def submit():
                       recipients=[os.getenv('MAIL_USERNAME')])
         msg.body = f"Name: {data['name']}\nEmail: {data['email']}\nPhone: {data['phone']}\nGuests: {data['guests']}"
         mail.send(msg)
+        logger.info(f"Email sent for: {data['name']}")
         return jsonify({'message': 'Form submitted successfully'}), 200
     except Exception as e:
         logger.error(f"Error sending email: {e}")
@@ -179,4 +184,4 @@ def create_all_with_retry(retries=5, delay=1):
 create_all_with_retry()
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000)
+    app.run(host='0.0.0.0')  # Run on the default Flask port (5000)
