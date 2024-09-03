@@ -6,6 +6,8 @@ import os
 import time
 import logging
 from sqlalchemy.exc import OperationalError
+from sqlalchemy.engine import create_engine
+from sqlalchemy import text
 
 app = Flask(__name__, static_folder='../wedding/build', template_folder='../wedding/build')
 CORS(app)
@@ -46,6 +48,18 @@ class FormData(db.Model):
     def __repr__(self):
         return f'<FormData {self.name}>'
 
+def create_database_if_not_exists():
+    """Create the database if it does not exist."""
+    engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
+    db_name = app.config['SQLALCHEMY_DATABASE_URI'].split('/')[-1]
+    
+    # Check if the database exists
+    if not engine.dialect.has_database(engine, db_name):
+        logger.info("Database does not exist. Creating database...")
+        conn = engine.connect()
+        conn.execute(text(f"CREATE DATABASE {db_name}"))
+        conn.close()
+
 def execute_with_retry(func, retries=5, delay=1):
     for attempt in range(retries):
         try:
@@ -76,7 +90,12 @@ def submit():
         db.session.commit()
         logger.info(f"Data saved: {new_data}")
 
+    def create_and_save():
+        create_all_with_retry()
+        save_to_db()
+
     try:
+        create_database_if_not_exists()  # Ensure database exists
         execute_with_retry(save_to_db)
     except Exception as e:
         db.session.rollback()
@@ -147,11 +166,5 @@ def create_all_with_retry(retries=5, delay=1):
     raise Exception("Failed to create database tables after several retries.")
 
 if __name__ == '__main__':
-    # Remove this block if you're using `run_server.py` for running the application
-    if not os.path.exists('formdata.db'):
-        logger.info("Database does not exist. Creating tables...")
-        create_all_with_retry()
-    else:
-        logger.info("Database already exists.")
-    port = int(os.environ.get('PORT', 8000))
-    app.run(host='0.0.0.0', port=8000)
+    port = int(os.environ.get('PORT', 8000))  # Get port from environment variable, default to 8000
+    app.run(host='0.0.0.0', port=port)
