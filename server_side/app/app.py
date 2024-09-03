@@ -51,14 +51,14 @@ class FormData(db.Model):
 def create_database_if_not_exists():
     """Create the database if it does not exist."""
     engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
-    db_name = app.config['SQLALCHEMY_DATABASE_URI'].split('/')[-1]
-    
-    # Check if the database exists
+    if engine.url.get_backend_name() == 'sqlite':
+        # SQLite doesn't require separate database creation
+        return
+    db_name = engine.url.database
     if not engine.dialect.has_database(engine, db_name):
         logger.info("Database does not exist. Creating database...")
-        conn = engine.connect()
-        conn.execute(text(f"CREATE DATABASE {db_name}"))
-        conn.close()
+        with engine.connect() as conn:
+            conn.execute(text(f"CREATE DATABASE {db_name}"))
 
 def execute_with_retry(func, retries=5, delay=1):
     for attempt in range(retries):
@@ -89,10 +89,6 @@ def submit():
         db.session.add(new_data)
         db.session.commit()
         logger.info(f"Data saved: {new_data}")
-
-    def create_and_save():
-        create_all_with_retry()
-        save_to_db()
 
     try:
         create_database_if_not_exists()  # Ensure database exists
@@ -164,6 +160,9 @@ def create_all_with_retry(retries=5, delay=1):
                 logger.error(f"OperationalError during table creation: {e}")
                 raise
     raise Exception("Failed to create database tables after several retries.")
+
+# Ensure tables are created before starting the server
+create_all_with_retry()
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8000))  # Get port from environment variable, default to 8000
