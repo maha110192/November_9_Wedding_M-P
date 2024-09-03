@@ -51,14 +51,27 @@ class FormData(db.Model):
 def create_database_if_not_exists():
     """Create the database if it does not exist."""
     engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
+    db_name = engine.url.database
+
     if engine.url.get_backend_name() == 'sqlite':
         # SQLite doesn't require separate database creation
         return
-    db_name = engine.url.database
-    if not engine.dialect.has_database(engine, db_name):
+
+    # Create a separate engine for connecting to the postgres server (not a specific database)
+    server_engine = create_engine(f"postgresql://{engine.url.username}:{engine.url.password}@{engine.url.host}:{engine.url.port}/postgres")
+
+    # Check if the database exists
+    try:
+        with server_engine.connect() as conn:
+            conn.execute(text(f"SELECT 1 FROM pg_database WHERE datname = :db_name"), {"db_name": db_name})
+    except Exception as e:
         logger.info("Database does not exist. Creating database...")
-        with engine.connect() as conn:
-            conn.execute(text(f"CREATE DATABASE {db_name}"))
+        try:
+            with server_engine.connect() as conn:
+                conn.execute(text(f"CREATE DATABASE {db_name}"))
+        except Exception as e:
+            logger.error(f"Failed to create database: {e}")
+            raise
 
 def execute_with_retry(func, retries=5, delay=1):
     for attempt in range(retries):
