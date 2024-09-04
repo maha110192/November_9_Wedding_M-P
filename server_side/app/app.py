@@ -2,12 +2,12 @@ from flask import Flask, request, jsonify
 from flask_mail import Mail, Message
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.exc import IntegrityError, OperationalError
+from sqlalchemy.engine import create_engine
+from marshmallow import Schema, fields, ValidationError
 import os
 import time
 import logging
-from sqlalchemy.exc import OperationalError
-from sqlalchemy.engine import create_engine
-from sqlalchemy import text
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -46,19 +46,21 @@ class FormData(db.Model):
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100), nullable=False)
     phone = db.Column(db.String(20), nullable=False)
-    guests = db.Column(db.String(10), nullable=False)
+    guests = db.Column(db.Integer, nullable=False)  # Ensure this is Integer
 
     def __repr__(self):
         return f'<FormData {self.name}>'
+
+class FormDataSchema(Schema):
+    name = fields.Str(required=True)
+    email = fields.Email(required=True)
+    phone = fields.Str(required=True)
+    guests = fields.Int(missing=0)
 
 def create_database_if_not_exists():
     """Create the database if it does not exist."""
     engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
     db_name = engine.url.database
-
-    if engine.url.get_backend_name() == 'sqlite':
-        # SQLite doesn't require separate database creation
-        return
 
     # Create a separate engine for connecting to the postgres server (not a specific database)
     server_engine = create_engine(f"postgresql://{engine.url.username}:{engine.url.password}@{engine.url.host}:{engine.url.port}/postgres")
@@ -92,43 +94,77 @@ def submit():
     data = request.json
     logger.info(f"Received data: {data}")
 
-    # Check for missing fields and log
-    missing_fields = [field for field in ['name', 'email', 'phone', 'guests'] if data.get(field) is None]
-    if missing_fields:
-        logger.error(f"Validation error: Missing fields - {missing_fields}")
-        return jsonify({'error': f"Missing fields: {', '.join(missing_fields)}"}), 400
+    schema = FormDataSchema()
+
+    # Validación de datos usando marshmallow
+    try:
+        validated_data = schema.load(data)
+    except ValidationError as err:
+        logger.error(f"Validation error: {err.messages}")
+        return jsonify({'error': 'Invalid data format', 'details': err.messages}), 400
+
+    logger.info(f"Validated data: {validated_data}")
+
+    # Extraer valores del diccionario validado
+    name = validated_data['name']
+    email = validated_data['email']
+    phone = validated_data['phone']
+    guests = validated_data['guests']
+
+    logger.info(f"Field 'name' value: {name}")
+    logger.info(f"Field 'email' value: {email}")
+    logger.info(f"Field 'phone' value: {phone}")
+    logger.info(f"Field 'guests' value: {guests}")
 
     def save_to_db():
         logger.info("Saving data to the database...")
         new_data = FormData(
-            name=data['name'],
-            email=data['email'],
-            phone=data['phone'],
-            guests=data['guests']
+            name=name,
+            email=email,
+            phone=phone,
+            guests=guests
         )
         db.session.add(new_data)
         db.session.commit()
         logger.info(f"Data saved: {new_data}, with ID: {new_data.id}")
+        return new_data
 
     try:
-        create_database_if_not_exists()  # Ensure database exists
-        execute_with_retry(save_to_db)
+        create_database_if_not_exists()  # Aseguramos que la base de datos existe
+        new_entry = execute_with_retry(save_to_db)
+    except ValueError as e:
+        logger.error(f"ValueError in save_to_db: {e}")
+        return jsonify({'error': 'Invalid data format. Please check your input.'}), 400
+    except IntegrityError as e:
+        db.session.rollback()
+        logger.error(f"IntegrityError in save_to_db: {e}")
+        return jsonify({'error': 'Data integrity error. This could be due to duplicate entries.'}), 409
+    except OperationalError as e:
+        db.session.rollback()
+        logger.error(f"Database OperationalError: {e}")
+        return jsonify({'error': 'Database operation failed. Please try again later.'}), 503
     except Exception as e:
         db.session.rollback()
-        logger.error(f"Error saving to database: {e}")
-        return jsonify({'error': str(e)}), 500
+        logger.error(f"Unexpected error in save_to_db: {e}")
+        return jsonify({'error': 'An unexpected error occurred. Please contact support.'}), 500
 
+    if new_entry is None:
+        return jsonify({'error': 'Failed to save data'}), 500
+
+    # Si llegamos aquí, los datos se guardaron exitosamente. Ahora enviamos el email.
     try:
         msg = Message('Wedding Registration',
-                      sender=os.getenv('MAIL_USERNAME'),
-                      recipients=[os.getenv('MAIL_USERNAME')])
-        msg.body = f"Name: {data['name']}\nEmail: {data['email']}\nPhone: {data['phone']}\nGuests: {data['guests']}"
+            sender=app.config['MAIL_USERNAME'],
+            recipients=[app.config['MAIL_USERNAME']])
+        msg.body = f"Name: {name}\nEmail: {email}\nPhone: {phone}\nGuests: {guests}"
         mail.send(msg)
-        logger.info(f"Email sent for: {data['name']}")
-        return jsonify({'message': 'Form submitted successfully'}), 200
+        logger.info(f"Email sent for: {name}")
     except Exception as e:
         logger.error(f"Error sending email: {e}")
-        return jsonify({'error': str(e)}), 500
+        # Nota que no retornamos un error al cliente aquí, ya que los datos se guardaron correctamente
+        # Podrías considerar agregar esto a una cola de tareas para reintento posterior
+
+    return jsonify({'message': 'Form submitted successfully', 'id': new_entry.id}), 200
 
 @app.route('/forms', methods=['GET'])
 def get_all_forms():
@@ -140,7 +176,7 @@ def get_all_forms():
                 'name': form.name,
                 'email': form.email,
                 'phone': form.phone,
-                'guests': form.guests
+                'guests': form.guests,  
             } for form in forms]
             return jsonify(result)
         else:
@@ -172,6 +208,7 @@ def create_all_with_retry(retries=5, delay=1):
         try:
             with app.app_context():
                 db.create_all()
+            logger.info("Tables created successfully.")
             return
         except OperationalError as e:
             if 'database is locked' in str(e):
@@ -186,4 +223,4 @@ def create_all_with_retry(retries=5, delay=1):
 create_all_with_retry()
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0')  # Run on the default Flask port (5000)
+    app.run(host='0.0.0.0', port=5000)  # Run on the default Flask port (5000)
