@@ -5,6 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail
 from flask_cors import CORS
 from dotenv import load_dotenv
+import logging
 
 load_dotenv()
 
@@ -13,7 +14,9 @@ mail = Mail()
 
 def create_app():
     app = Flask(__name__)
-    CORS(app)
+    # Configurar CORS
+    CORS(app, resources={r"/*": {"origins": "*"}})  # Ajusta según las necesidades de seguridad
+
 
     # Database configuration
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
@@ -30,6 +33,10 @@ def create_app():
     app.config['SESSION_COOKIE_SECURE'] = True
     app.config['REMEMBER_COOKIE_SECURE'] = True
     app.config['SESSION_PROTECTION'] = 'strong'
+
+     # Logging configuration
+    logging.basicConfig(level=logging.DEBUG)
+    app.logger.setLevel(logging.DEBUG)
 
     db.init_app(app)
     mail.init_app(app)

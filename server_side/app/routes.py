@@ -22,7 +22,7 @@ def rsvp():
     # Send email confirmation
     msg = Message("RSVP Confirmation",
                 sender= os.getenv('MAIL_USERNAME'),  # Ensure sender is set
-                recipients=[ os.getenv('MAIL_USERNAME')]) # Correct recipients
+                recipients= [ os.getenv('MAIL_USERNAME')]) # Correct recipients
     msg.body = f"Thank you for your RSVP, {data['name']}! We have confirmed {data['guests']} guest(s)."
     mail.send(msg)
 
@@ -56,3 +56,4 @@ def delete_rsvp(id):
     db.session.delete(rsvp)
     db.session.commit()
     return jsonify({'message': 'RSVP deleted!'})
+
