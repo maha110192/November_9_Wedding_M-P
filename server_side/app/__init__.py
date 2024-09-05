@@ -15,7 +15,7 @@ mail = Mail()
 def create_app():
     app = Flask(__name__)
     # Configurar CORS
-    CORS(app, resources={r"/*": {"origins": "*"}})  # Ajusta según las necesidades de seguridad
+    CORS(app, resources={r"/*": {"origins": "https://november-9-wedding-m-p-frontend.onrender.com", "*"}})  # Ajusta según las necesidades de seguridad
 
 
     # Database configuration
@@ -37,6 +37,7 @@ def create_app():
      # Logging configuration
     logging.basicConfig(level=logging.DEBUG)
     app.logger.setLevel(logging.DEBUG)
+    logger = logging.getLogger(__name__)
 
     db.init_app(app)
     mail.init_app(app)
