@@ -12,9 +12,8 @@ export default function Gifts() {
         <div className="title-holder">
         <h2>{t('giftsTitle')}</h2>
           {/* <h4><br/>Want to support our adventure?</h4> */}
-          <br/>
-          <div className="subtitle">{t('giftsSubtitle')}</div>
-          <div className="subtitle">{t('giftsSubtitle2')}</div>
+          <div className="subtitle">{t('giftsSubtitle')}</div><br/>
+          {/* <div className="subtitle">{t('giftsSubtitle2')}</div> */}
         </div>
       </Container>
       <Container fluid>
