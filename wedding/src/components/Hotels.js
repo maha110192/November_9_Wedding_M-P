@@ -2,7 +2,7 @@ import React from 'react';
 import Container from 'react-bootstrap/Container';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHotel } from '@fortawesome/free-solid-svg-icons';
-
+import { useTranslation } from 'react-i18next';
 
 const locations = [
   {
@@ -29,12 +29,15 @@ const locations = [
 ]
 
 const Hotels = () => {
+
+  const { t } = useTranslation();
+
   return (
     <section id="wherewillbe" className='block services-block'>
       <Container fluid>
         <div className="title-holder">
-          <h2>Hotels</h2>
-          <div className="subtitle">Because your comfort is part of our special day</div>
+          <h2>{t('hotelsTitle')}</h2>
+          <div className="subtitle">{t('hotelsSubtitle')}</div>
         </div>
         <div className="row location_row">
           {locations.map((location) => (
@@ -56,33 +59,3 @@ const Hotels = () => {
 };
 
 export default Hotels;
-
-
-
-// import Container from "react-bootstrap/Container";
-// import React from "react";
-
-
-// export default function Hotels() {
-//   return (
-//     <section id="hotels" className="block services-block">
-//       <Container fluid>
-//         <div className="title-holder">
-//           <h2>Hotels</h2>
-//           <div className="subtitle">
-//                 Be ready for our big day
-//           </div>
-//         </div>
-//       </Container>
-//       <Container fluid>
-//         <div className="hotels">
-//             <ul>
-//                 <li><a href='https://alamedagrand.com' target='_blank'rel="noreferrer"><i className="fa-solid fa-hotel hotelsIcon"></i></a></li><p>Andrea Alameda</p>
-//                 <li><a href='https://www.marriott.com/es/hotels/agumc-aguascalientes-marriott-hotel/overview/' target='_blank'rel="noreferrer"><i className="fa-solid fa-hotel hotelsIcon"></i></a></li><p>Marriot Hotel</p>
-//                 <li><a href='https://www.hilton.com/en/hotels/agugigi-hilton-garden-inn-aguascalientes/?SEO_id=GMB-AMER-GI-AGUGIGI&y_source=1_MTIxNjk1ODAtNzE1LWxvY2F0aW9uLndlYnNpdGU%3D' target='_blank'rel="noreferrer"><i className="fa-solid fa-hotel hotelsIcon"></i></a></li><p>Hilton Garden Inn </p>
-//             </ul>
-//         </div>
-//       </Container>
-//     </section>
-
-// )}

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col } from 'react-bootstrap';
+import { useTranslation } from 'react-i18next';
 
+const Countdown = ({ endDate }) => {
+  const { t } = useTranslation();
 
-const WeedingCountdown = ({ endDate }) => {
   const calculateTimeLeft = () => {
     const difference = +endDate - +new Date();
     let timeLeft = { days: 0, hours: 0, minutes: 0, seconds: 0 };
@@ -35,34 +37,34 @@ const WeedingCountdown = ({ endDate }) => {
     <section id="countdown" className="block services-block">
       <Container fluid>
         <div className="title-holder">
-          <h2>Countdown</h2>
-          <div className="subtitle">Can’t wait to celebrate with you</div>
+          <h2>{t('countdownTitle')}</h2>
+          <div className="subtitle">{t('countdownSubtitle')}</div>
         </div>
       </Container>
       <Container className="countdown-container">
         <Row>
           <Col>
-            <div className="countdown-item countdown-days" >
+            <div className="countdown-item countdown-days">
               <span className="countdown-value">{days}</span>
-              <span className="countdown-label">Days</span>
+              <span className="countdown-label days">{t('days')}</span>
             </div>
           </Col>
           <Col>
             <div className="countdown-item">
               <span className="countdown-value">{hours}</span>
-              <span className="countdown-label">Hours</span>
+              <span className="countdown-label hours">{t('hours')}</span>
             </div>
           </Col>
           <Col>
             <div className="countdown-item">
               <span className="countdown-value">{minutes}</span>
-              <span className="countdown-label">Minutes</span>
+              <span className="countdown-label minutes">{t('minutes')}</span>
             </div>
           </Col>
           <Col>
             <div className="countdown-item">
               <span className="countdown-value">{seconds}</span>
-              <span className="countdown-label">Seconds</span>
+              <span className="countdown-label seconds">{t('seconds')}</span>
             </div>
           </Col>
         </Row>
@@ -71,6 +73,4 @@ const WeedingCountdown = ({ endDate }) => {
   );
 }
 
-export default WeedingCountdown;
-
-
+export default Countdown;

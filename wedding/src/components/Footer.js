@@ -1,7 +1,10 @@
 import Container from 'react-bootstrap/Container';
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+
 
 export default function Footer() {
+    const { t } = useTranslation();
     const [show, setShow] = useState(false);
 
     useEffect(() => {
@@ -37,8 +40,8 @@ export default function Footer() {
         <Container fluid>
             <div className="copyright" id='sociales'>
                 <div className="subtitle">
-                    <p>Got an upcoming event?</p>
-                    <p>Design your web invitation with us. <a href={whatsappURL} target='_blank' rel="noreferrer"><big><u>Click here</u></big></a></p>
+                    <p>{t('footer1')}</p>
+                    <p>{t('footer2')} <a href={whatsappURL} target='_blank' rel="noreferrer"><big><u>Click here</u></big></a></p>
                     <p><br /><small>© 2024 Calupoh+. All Rights Reserved.</small></p>
                 </div>
             </div>

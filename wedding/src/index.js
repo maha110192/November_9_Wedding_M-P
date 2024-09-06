@@ -4,7 +4,7 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import '@fortawesome/fontawesome-free/css/all.min.css';
-
+import './i18n'; // Asegúrate de que este archivo sea importado para inicializar i18next
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
