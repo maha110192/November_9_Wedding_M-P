@@ -1,31 +1,11 @@
 # app/routes.py
-from flask import Blueprint, request, jsonify, send_from_directory
+from flask import Blueprint, request, jsonify
 from flask_mail import Message
 from . import db, mail
 from .models import RSVP
 import os
 
 main = Blueprint('main', __name__)
-
-# Serve the React apps from specific routes
-@main.route('/wedding_miguel_pao_1guest/<path:path>')
-def serve_frontend_1guest(path):
-    return send_from_directory('wedding_1_guest/build', path)
-
-@main.route('/wedding_miguel_pao_2guests/<path:path>')
-def serve_frontend_2guests(path):
-    return send_from_directory('wedding/build', path)
-
-@main.route('/wedding_miguel_pao_1guest')
-@main.route('/wedding_miguel_pao_1guest/')
-def index_1guest():
-    return send_from_directory('wedding_1_guest/build', 'index.html')
-
-@main.route('/wedding_miguel_pao_2guests')
-@main.route('/wedding_miguel_pao_2guests/')
-def index_2guests():
-    return send_from_directory('wedding/build', 'index.html')
-
 
 @main.route('/rsvp', methods=['POST'])
 def rsvp():
