@@ -1,5 +1,5 @@
 # app/routes.py
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, send_from_directory
 from flask_mail import Message
 from . import db, mail
 from .models import RSVP
